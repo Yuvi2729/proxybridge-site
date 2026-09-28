@@ -112,6 +112,7 @@ footer{border-top:1px solid #1b202b;padding:35px 0;color:#7f8999}
     <div class="big-avatar" id="accountBigAvatar">Y</div>
     <div><div class="profile-name" id="profileName">Account</div><div class="profile-email" id="profileEmail"></div></div>
   </div>
+  <div class="plan" id="profilePlan">Plan: Free · Credits used: 0</div>
   <a class="logout-btn" href="account.html" style="display:block;text-align:center;margin-bottom:8px">Account Dashboard</a>
   <button class="logout-btn" type="button" onclick="logoutAccount()">Sign Out</button>
 </div>
@@ -372,7 +373,6 @@ function setAccountUI(user) {
   document.getElementById("accountName").textContent = user.name || "Account";
   document.getElementById("profileName").textContent = user.name || "Account";
   document.getElementById("profileEmail").textContent = user.email || "";
-  document.getElementById("profilePlan").textContent = `Plan: ${user.plan || "free"} · Credits used: ${user.credits_used ?? 0}`;
 }
 function toggleAccountMenu() {
   document.getElementById("accountMenu")?.classList.toggle("open");
