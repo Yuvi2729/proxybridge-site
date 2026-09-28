@@ -75,6 +75,8 @@ footer{border-top:1px solid #1b202b;padding:35px 0;color:#7f8999}
 .auth-status.show{display:block}
 .auth-switch{text-align:center;margin-top:16px;color:#9da6b5;font-size:13px}
 .auth-switch button{background:none;border:0;color:#b6a7ff;cursor:pointer;font-weight:700}
+
+.auth-verify{display:none}.auth-verify.show{display:block}.auth-verify h3{margin:0 0 8px}.auth-verify p{color:#9da6b5;font-size:13px;margin:0 0 16px}.verify-code{width:100%;padding:14px 12px;border-radius:10px;border:1px solid #303745;background:#0b0f16;color:#f4f5f8;outline:none;text-align:center;font-size:24px;letter-spacing:.35em;font-weight:800}.verify-code:focus{border-color:#7c5cff}.verify-actions{display:flex;gap:10px;margin-top:12px}.verify-actions button{flex:1;cursor:pointer}.verify-resend{background:#11151d!important;border:1px solid #303745!important;color:#f4f5f8!important}.auth-submit:disabled,.verify-actions button:disabled{opacity:.55;cursor:not-allowed}
 @media(max-width:750px){.auth-actions .auth-btn{padding:8px 10px;font-size:12px}}
 
 </style>
@@ -288,6 +290,17 @@ footer{border-top:1px solid #1b202b;padding:35px 0;color:#7f8999}
       <div class="auth-status" id="authStatus"></div>
     </form>
 
+    <div class="auth-verify" id="verifyPanel">
+      <h3>Verify your email</h3>
+      <p>We sent a 6-digit verification code to <strong id="verifyEmailText"></strong>.</p>
+      <input id="verifyCode" class="verify-code" inputmode="numeric" maxlength="6" pattern="\d{6}" autocomplete="one-time-code" placeholder="000000" aria-label="6-digit verification code">
+      <div class="verify-actions">
+        <button class="btn" id="verifySubmit" type="button" onclick="verifyEmailCode()">Verify Email</button>
+        <button class="btn verify-resend" id="verifyResend" type="button" onclick="resendVerificationCode()">Resend Code</button>
+      </div>
+      <div class="auth-status" id="verifyStatus"></div>
+    </div>
+
     <div class="auth-switch">
       <span id="authSwitchText">Already have an account?</span>
       <button type="button" id="authSwitchButton" onclick="toggleAuthMode()">Sign In</button>
@@ -306,9 +319,11 @@ footer{border-top:1px solid #1b202b;padding:35px 0;color:#7f8999}
 const AUTH_API_URL = "https://proxybridge-auth-backend.onrender.com";
 
 let authMode = "register";
+let pendingVerifyEmail = "";
 
 function openAuth(mode) {
   authMode = mode || "register";
+  resetVerifyPanel();
   document.getElementById("authOverlay").classList.add("open");
   renderAuthMode();
   setTimeout(() => document.getElementById("authEmail").focus(), 50);
@@ -316,9 +331,11 @@ function openAuth(mode) {
 function closeAuth() {
   document.getElementById("authOverlay").classList.remove("open");
   setAuthStatus("");
+  resetVerifyPanel();
 }
 function toggleAuthMode() {
   authMode = authMode === "register" ? "login" : "register";
+  resetVerifyPanel();
   renderAuthMode();
 }
 function renderAuthMode() {
@@ -336,6 +353,35 @@ function setAuthStatus(text, error=false) {
   el.textContent = text || "";
   el.classList.toggle("show", !!text);
   el.style.color = error ? "#ff9b9b" : "#aeb5c2";
+}
+function setVerifyStatus(text, error=false) {
+  const el = document.getElementById("verifyStatus");
+  el.textContent = text || "";
+  el.classList.toggle("show", !!text);
+  el.style.color = error ? "#ff9b9b" : "#aeb5c2";
+}
+function resetVerifyPanel() {
+  pendingVerifyEmail = "";
+  const panel = document.getElementById("verifyPanel");
+  const form = document.getElementById("authForm");
+  const switchEl = document.querySelector(".auth-switch");
+  const note = document.querySelector(".auth-note");
+  if (panel) panel.classList.remove("show");
+  if (form) form.style.display = "";
+  if (switchEl) switchEl.style.display = "";
+  if (note) note.style.display = "";
+  const code = document.getElementById("verifyCode");
+  if (code) code.value = "";
+  setVerifyStatus("");
+}
+function showVerifyPanel(email) {
+  pendingVerifyEmail = email;
+  document.getElementById("authForm").style.display = "none";
+  document.querySelector(".auth-switch").style.display = "none";
+  document.querySelector(".auth-note").style.display = "none";
+  document.getElementById("verifyEmailText").textContent = email;
+  document.getElementById("verifyPanel").classList.add("show");
+  setTimeout(() => document.getElementById("verifyCode").focus(), 50);
 }
 async function submitAuth(event) {
   event.preventDefault();
@@ -363,8 +409,8 @@ async function submitAuth(event) {
     const data = await response.json().catch(() => ({}));
     if (!response.ok) throw new Error(data.error || data.message || "Request failed.");
     if (authMode === "register") {
-      setAuthStatus("Account created. Check your email for the verification code.");
-      document.getElementById("authSubmit").textContent = "Verification Email Sent";
+      setAuthStatus("");
+      showVerifyPanel(email);
     } else {
       setAuthStatus("Signed in successfully. You can now use your Proxy Bridge account.");
     }
@@ -374,6 +420,58 @@ async function submitAuth(event) {
     button.disabled = false;
   }
 }
+async function verifyEmailCode() {
+  const code = document.getElementById("verifyCode").value.trim();
+  if (!pendingVerifyEmail) return;
+  if (!/^\d{6}$/.test(code)) {
+    setVerifyStatus("Enter the 6-digit code from your email.", true);
+    return;
+  }
+  const button = document.getElementById("verifySubmit");
+  button.disabled = true;
+  setVerifyStatus("Verifying…");
+  try {
+    const response = await fetch(AUTH_API_URL.replace(/\/+$/,"") + "/auth/verify-code", {
+      method: "POST",
+      headers: {"Content-Type":"application/json"},
+      credentials: "include",
+      body: JSON.stringify({email: pendingVerifyEmail, code, purpose: "register"})
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(data.error || data.message || "Verification failed.");
+    setVerifyStatus("Email verified successfully. Your Proxy Bridge account is ready.");
+    setTimeout(() => closeAuth(), 1200);
+  } catch (err) {
+    setVerifyStatus(err.message || "Unable to verify the code.", true);
+  } finally {
+    button.disabled = false;
+  }
+}
+async function resendVerificationCode() {
+  if (!pendingVerifyEmail) return;
+  const button = document.getElementById("verifyResend");
+  button.disabled = true;
+  setVerifyStatus("Sending a new code…");
+  try {
+    const response = await fetch(AUTH_API_URL.replace(/\/+$/,"") + "/auth/send-code", {
+      method: "POST",
+      headers: {"Content-Type":"application/json"},
+      credentials: "include",
+      body: JSON.stringify({email: pendingVerifyEmail, purpose: "register"})
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(data.error || data.message || "Unable to resend the code.");
+    setVerifyStatus("New verification code sent. Check your email.");
+  } catch (err) {
+    setVerifyStatus(err.message || "Unable to resend the code.", true);
+  } finally {
+    button.disabled = false;
+  }
+}
+document.getElementById("verifyCode").addEventListener("input", function(){
+  this.value = this.value.replace(/\D/g, "").slice(0, 6);
+});
+
 document.getElementById("authOverlay").addEventListener("click", function(e){
   if (e.target === this) closeAuth();
 });
