@@ -77,6 +77,19 @@ footer{border-top:1px solid #1b202b;padding:35px 0;color:#7f8999}
 .auth-switch button{background:none;border:0;color:#b6a7ff;cursor:pointer;font-weight:700}
 
 .auth-verify{display:none}.auth-verify.show{display:block}.auth-verify h3{margin:0 0 8px}.auth-verify p{color:#9da6b5;font-size:13px;margin:0 0 16px}.verify-code{width:100%;padding:14px 12px;border-radius:10px;border:1px solid #303745;background:#0b0f16;color:#f4f5f8;outline:none;text-align:center;font-size:24px;letter-spacing:.35em;font-weight:800}.verify-code:focus{border-color:#7c5cff}.verify-actions{display:flex;gap:10px;margin-top:12px}.verify-actions button{flex:1;cursor:pointer}.verify-resend{background:#11151d!important;border:1px solid #303745!important;color:#f4f5f8!important}.auth-submit:disabled,.verify-actions button:disabled{opacity:.55;cursor:not-allowed}
+
+.account-wrap{position:relative;display:none;align-items:center;gap:9px}
+.account-avatar{width:38px;height:38px;border-radius:50%;background:#7c5cff;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;cursor:pointer;border:1px solid #9b86ff;user-select:none}
+.account-name{font-size:14px;font-weight:700;color:#f4f5f8;max-width:120px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.account-menu{display:none;position:absolute;right:0;top:48px;width:270px;background:#10141c;border:1px solid #2a3140;border-radius:14px;padding:16px;box-shadow:0 20px 60px rgba(0,0,0,.45);z-index:10000}
+.account-menu.open{display:block}
+.account-menu .profile-row{display:flex;align-items:center;gap:12px;padding-bottom:12px;margin-bottom:12px;border-bottom:1px solid #202633}
+.account-menu .big-avatar{width:48px;height:48px;border-radius:50%;background:#7c5cff;display:flex;align-items:center;justify-content:center;font-weight:800}
+.account-menu .profile-name{font-weight:800}.account-menu .profile-email{font-size:12px;color:#8f98a7;word-break:break-all}
+.account-menu .plan{margin:10px 0;padding:9px 10px;border-radius:9px;background:#0b0f16;color:#aeb5c2;font-size:13px}
+.account-menu .logout-btn{width:100%;padding:10px;border-radius:9px;border:1px solid #303745;background:#11151d;color:#f4f5f8;cursor:pointer;font-weight:700}
+.account-menu .logout-btn:hover{border-color:#7c5cff}
+
 @media(max-width:750px){.auth-actions .auth-btn{padding:8px 10px;font-size:12px}}
 
 </style>
@@ -85,10 +98,23 @@ footer{border-top:1px solid #1b202b;padding:35px 0;color:#7f8999}
 
 <nav><div class="wrap" style="display:flex;width:100%;justify-content:space-between;align-items:center">
 <div class="brand"><div class="logo"><img src="logo.png" alt="Proxy Bridge"></div>Proxy Bridge</div>
-<div class="auth-actions">
+<div class="auth-actions" id="guestActions">
 <a class="btn" href="#buy">View Plans</a>
 <button class="auth-btn" type="button" onclick="openAuth('login')">Sign In</button>
 <button class="auth-btn primary" type="button" onclick="openAuth('register')">Register</button>
+</div>
+<div class="auth-actions account-wrap" id="accountWrap">
+<a class="btn" href="#buy">View Plans</a>
+<div class="account-avatar" id="accountAvatar" onclick="toggleAccountMenu()" title="Account">Y</div>
+<div class="account-name" id="accountName">Account</div>
+<div class="account-menu" id="accountMenu">
+  <div class="profile-row">
+    <div class="big-avatar" id="accountBigAvatar">Y</div>
+    <div><div class="profile-name" id="profileName">Account</div><div class="profile-email" id="profileEmail"></div></div>
+  </div>
+  <div class="plan" id="profilePlan">Plan: Free · Credits used: 0</div>
+  <button class="logout-btn" type="button" onclick="logoutAccount()">Sign Out</button>
+</div>
 </div></div></nav>
 
 <main>
@@ -320,6 +346,54 @@ const AUTH_API_URL = "https://proxybridge-auth-backend.onrender.com";
 
 let authMode = "register";
 let pendingVerifyEmail = "";
+let currentUser = null;
+
+function initials(name) {
+  const parts = String(name || "Account").trim().split(/\s+/).filter(Boolean);
+  if (!parts.length) return "A";
+  return parts.slice(0,2).map(p => p[0]).join("").toUpperCase();
+}
+function setAccountUI(user) {
+  currentUser = user || null;
+  const guest = document.getElementById("guestActions");
+  const wrap = document.getElementById("accountWrap");
+  if (!guest || !wrap) return;
+  if (!user) {
+    guest.style.display = "flex";
+    wrap.style.display = "none";
+    document.getElementById("accountMenu")?.classList.remove("open");
+    return;
+  }
+  guest.style.display = "none";
+  wrap.style.display = "flex";
+  const init = initials(user.name);
+  document.getElementById("accountAvatar").textContent = init;
+  document.getElementById("accountBigAvatar").textContent = init;
+  document.getElementById("accountName").textContent = user.name || "Account";
+  document.getElementById("profileName").textContent = user.name || "Account";
+  document.getElementById("profileEmail").textContent = user.email || "";
+  document.getElementById("profilePlan").textContent = `Plan: ${user.plan || "free"} · Credits used: ${user.credits_used ?? 0}`;
+}
+function toggleAccountMenu() {
+  document.getElementById("accountMenu")?.classList.toggle("open");
+}
+async function loadCurrentUser() {
+  try {
+    const response = await fetch(AUTH_API_URL.replace(/\/+$/,"") + "/auth/me", {credentials:"include"});
+    const data = await response.json().catch(() => ({}));
+    if (response.ok && data.authenticated && data.user) setAccountUI(data.user);
+    else setAccountUI(null);
+  } catch (_) {
+    setAccountUI(null);
+  }
+}
+async function logoutAccount() {
+  try {
+    await fetch(AUTH_API_URL.replace(/\/+$/,"") + "/auth/logout", {method:"POST", credentials:"include", headers:{"Content-Type":"application/json"}});
+  } catch (_) {}
+  setAccountUI(null);
+  document.getElementById("accountMenu")?.classList.remove("open");
+}
 
 function openAuth(mode) {
   authMode = mode || "register";
@@ -413,6 +487,10 @@ async function submitAuth(event) {
       showVerifyPanel(email);
     } else {
       setAuthStatus("Signed in successfully. You can now use your Proxy Bridge account.");
+      if (data.user) {
+        setAccountUI(data.user);
+        setTimeout(() => closeAuth(), 700);
+      }
     }
   } catch (err) {
     setAuthStatus(err.message || "Unable to contact the account service.", true);
@@ -440,7 +518,8 @@ async function verifyEmailCode() {
     const data = await response.json().catch(() => ({}));
     if (!response.ok) throw new Error(data.error || data.message || "Verification failed.");
     setVerifyStatus("Email verified successfully. Your Proxy Bridge account is ready.");
-    setTimeout(() => closeAuth(), 1200);
+    if (data.user) setAccountUI(data.user);
+    setTimeout(() => closeAuth(), 900);
   } catch (err) {
     setVerifyStatus(err.message || "Unable to verify the code.", true);
   } finally {
@@ -475,9 +554,15 @@ document.getElementById("verifyCode").addEventListener("input", function(){
 document.getElementById("authOverlay").addEventListener("click", function(e){
   if (e.target === this) closeAuth();
 });
-document.addEventListener("keydown", function(e){
-  if (e.key === "Escape") closeAuth();
+document.addEventListener("click", function(e){
+  const wrap = document.getElementById("accountWrap");
+  const menu = document.getElementById("accountMenu");
+  if (wrap && menu && !wrap.contains(e.target)) menu.classList.remove("open");
 });
+document.addEventListener("keydown", function(e){
+  if (e.key === "Escape") { closeAuth(); document.getElementById("accountMenu")?.classList.remove("open"); }
+});
+loadCurrentUser();
 </script>
 
 </body>
