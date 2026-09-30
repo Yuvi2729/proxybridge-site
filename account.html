@@ -168,7 +168,13 @@ function showDashboard(user){
     unlimited:Infinity
   };
 
-  const limit=Object.prototype.hasOwnProperty.call(limits,plan)?limits[plan]:20;
+  // The backend owns the limit so the website, the desktop app and the
+  // billing webhooks can never disagree; the table above is only a fallback
+  // for a cached copy saved before the backend sent credits_limit.
+  const fromBackend=Number(user.credits_limit);
+  const limit=Number.isFinite(fromBackend) && fromBackend>0
+    ? fromBackend
+    : (Object.prototype.hasOwnProperty.call(limits,plan)?limits[plan]:20);
   const remaining=limit===Infinity?"Unlimited":Math.max(0,limit-used);
 
   document.getElementById("avatar").textContent=initials(user.name);
@@ -234,11 +240,9 @@ function clearLocalSession(){
 }
 
 async function loadAccount(){
+  // Paint the cached account first so a reload does not flash the sign-in
+  // prompt, but the backend session cookie is the only proof of a session.
   const cachedUser=getLocalSessionUser();
-
-  // Use the persistent website session immediately.
-  // This avoids redirecting to index.html when the backend cookie
-  // is unavailable during cross-page navigation.
   if(cachedUser){
     showDashboard(cachedUser);
   }
@@ -256,20 +260,15 @@ async function loadAccount(){
       showDashboard(data.user);
       return;
     }
+  }catch(error){}
 
-    // Backend cookie unavailable: keep the locally restored account.
-    if(cachedUser) return;
-
-    document.getElementById("loading").innerHTML =
-      'Please sign in to open your account.<br><br>' +
-      '<a class="btn" href="index.html" style="display:inline-block">Sign In</a>';
-  }catch(error){
-    if(cachedUser) return;
-
-    document.getElementById("loading").innerHTML =
-      'Please sign in to open your account.<br><br>' +
-      '<a class="btn" href="index.html" style="display:inline-block">Sign In</a>';
-  }
+  // The backend did not confirm the session. Showing the cached copy here is
+  // what made the dashboard display an account every action then rejected as
+  // invalid, so drop it and ask for a sign-in.
+  clearLocalSession();
+  document.getElementById("loading").innerHTML =
+    'Please sign in to open your account.<br><br>' +
+    '<a class="btn" href="index.html" style="display:inline-block">Sign In</a>';
 }
 
 async function logoutAccount(){

@@ -437,9 +437,8 @@ function clearLocalSession() {
 }
 
 async function loadCurrentUser() {
-  // Restore the account immediately so navigating/refreshing the dashboard
-  // does not make the website appear signed out just because the browser
-  // session cookie is unavailable.
+  // Paint the cached account first so a reload does not flash "signed out",
+  // but the backend session cookie is the only proof of a session.
   const cachedUser = getLocalSessionUser();
   if (cachedUser) setAccountUI(cachedUser);
 
@@ -455,13 +454,13 @@ async function loadCurrentUser() {
       setAccountUI(data.user);
       return;
     }
+  } catch (_) {}
 
-    // Do NOT immediately clear a valid local account when /auth/me is
-    // unavailable or the backend cookie has not survived navigation.
-    if (!cachedUser) setAccountUI(null);
-  } catch (_) {
-    if (!cachedUser) setAccountUI(null);
-  }
+  // The backend did not confirm the session. Keeping the cached copy here is
+  // what made the site show a signed-in account that every action then
+  // rejected as invalid, so drop it and show the signed-out state.
+  clearLocalSession();
+  setAccountUI(null);
 }
 function openPaidCheckout(url, event) {
   if (event) event.preventDefault();
@@ -591,7 +590,23 @@ async function submitAuth(event) {
       body: JSON.stringify(body)
     });
     const data = await response.json().catch(() => ({}));
-    if (!response.ok) throw new Error(data.error || data.message || "Request failed.");
+    if (!response.ok) {
+      const message = data.error || data.message || "Request failed.";
+      // An account that registered but never finished verifying cannot sign
+      // in, and an error string alone dead-ends the user. Send them to the
+      // code entry panel, where they can enter the code or request a new one.
+      if (authMode === "login" && /not verified/i.test(message)) {
+        showVerifyPanel(email);
+        setVerifyStatus(message + " Enter your code below, or send a new one.", true);
+        return;
+      }
+      if (authMode === "register" && /not verified yet/i.test(message)) {
+        showVerifyPanel(email);
+        setVerifyStatus(message, true);
+        return;
+      }
+      throw new Error(message);
+    }
     if (authMode === "register") {
       setAuthStatus("");
       showVerifyPanel(email);
