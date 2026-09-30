@@ -260,13 +260,15 @@ async function loadAccount(){
     // Backend cookie unavailable: keep the locally restored account.
     if(cachedUser) return;
 
-    document.getElementById("loading").textContent="Please sign in to open your account.";
-    setTimeout(()=>{ window.location.href="index.html"; },1200);
+    document.getElementById("loading").innerHTML =
+      'Please sign in to open your account.<br><br>' +
+      '<a class="btn" href="index.html" style="display:inline-block">Sign In</a>';
   }catch(error){
     if(cachedUser) return;
 
-    document.getElementById("loading").textContent="Please sign in to open your account.";
-    setTimeout(()=>{ window.location.href="index.html"; },1200);
+    document.getElementById("loading").innerHTML =
+      'Please sign in to open your account.<br><br>' +
+      '<a class="btn" href="index.html" style="display:inline-block">Sign In</a>';
   }
 }
 
