@@ -75,6 +75,7 @@ footer{border-top:1px solid #1b202b;padding:35px 0;color:#7f8999}
 .auth-status.show{display:block}
 .auth-switch{text-align:center;margin-top:16px;color:#9da6b5;font-size:13px}
 .auth-switch button{background:none;border:0;color:#b6a7ff;cursor:pointer;font-weight:700}
+.forgot-password-wrap{text-align:right;margin-top:8px;display:none}.forgot-password-btn{background:none;border:0;color:#b6a7ff;cursor:pointer;font-size:13px;padding:3px 0}.forgot-password-btn:hover{text-decoration:underline}.reset-panel{display:none}.reset-panel.show{display:block}.reset-panel h3{margin:0 0 8px}.reset-panel p{color:#9da6b5;font-size:13px;margin:0 0 14px}.reset-actions{display:flex;gap:10px;margin-top:12px}.reset-actions button{flex:1;cursor:pointer}
 
 .auth-verify{display:none}.auth-verify.show{display:block}.auth-verify h3{margin:0 0 8px}.auth-verify p{color:#9da6b5;font-size:13px;margin:0 0 16px}.verify-code{width:100%;padding:14px 12px;border-radius:10px;border:1px solid #303745;background:#0b0f16;color:#f4f5f8;outline:none;text-align:center;font-size:24px;letter-spacing:.35em;font-weight:800}.verify-code:focus{border-color:#7c5cff}.verify-actions{display:flex;gap:10px;margin-top:12px}.verify-actions button{flex:1;cursor:pointer}.verify-resend{background:#11151d!important;border:1px solid #303745!important;color:#f4f5f8!important}.auth-submit:disabled,.verify-actions button:disabled{opacity:.55;cursor:not-allowed}
 
@@ -314,7 +315,40 @@ footer{border-top:1px solid #1b202b;padding:35px 0;color:#7f8999}
 
       <button class="btn auth-submit" id="authSubmit" type="submit">Create Account</button>
       <div class="auth-status" id="authStatus"></div>
+      <div class="forgot-password-wrap" id="forgotPasswordWrap">
+        <button type="button" class="forgot-password-btn" onclick="showForgotPassword()">Forgot password?</button>
+      </div>
     </form>
+
+    <div class="reset-panel" id="resetPanel">
+      <h3>Reset your password</h3>
+      <p>Enter your account email and we’ll send you a 6-digit reset code.</p>
+      <div class="auth-field">
+        <label for="resetEmail">Email</label>
+        <input id="resetEmail" type="email" autocomplete="email" placeholder="you@example.com">
+      </div>
+      <button class="btn auth-submit" id="resetSendCode" type="button" onclick="sendResetCode()">Send Reset Code</button>
+      <div class="auth-field" style="margin-top:12px">
+        <label for="resetCode">Reset Code</label>
+        <input id="resetCode" inputmode="numeric" maxlength="6" autocomplete="one-time-code" placeholder="000000">
+      </div>
+      <div class="auth-field" style="margin-top:12px">
+        <label for="resetPassword">New Password</label>
+        <input id="resetPassword" type="password" minlength="8" autocomplete="new-password" placeholder="At least 8 characters">
+      </div>
+      <div class="auth-field" style="margin-top:12px">
+        <label for="resetPasswordConfirm">Confirm New Password</label>
+        <input id="resetPasswordConfirm" type="password" minlength="8" autocomplete="new-password" placeholder="Repeat your new password">
+      </div>
+      <div class="reset-actions">
+        <button class="btn" type="button" onclick="backToSignIn()">Back to Sign In</button>
+        <button class="btn" id="resetPasswordBtn" type="button" onclick="resetPassword()">Reset Password</button>
+      </div>
+      <div class="reset-actions">
+        <button class="btn verify-resend" id="resetResendBtn" type="button" onclick="resendResetCode()">Resend Code</button>
+      </div>
+      <div class="auth-status" id="resetStatus"></div>
+    </div>
 
     <div class="auth-verify" id="verifyPanel">
       <h3>Verify your email</h3>
@@ -436,6 +470,7 @@ function renderAuthMode() {
   document.getElementById("passwordField").querySelector("input").setAttribute("autocomplete", register ? "new-password" : "current-password");
   document.getElementById("authSwitchText").textContent = register ? "Already have an account?" : "New to Proxy Bridge?";
   document.getElementById("authSwitchButton").textContent = register ? "Sign In" : "Register";
+  document.getElementById("forgotPasswordWrap").style.display = register ? "none" : "block";
   setAuthStatus("");
 }
 function setAuthStatus(text, error=false) {
@@ -463,6 +498,12 @@ function resetVerifyPanel() {
   const code = document.getElementById("verifyCode");
   if (code) code.value = "";
   setVerifyStatus("");
+  const resetPanel = document.getElementById("resetPanel");
+  const authForm = document.getElementById("authForm");
+  if (resetPanel) resetPanel.classList.remove("show");
+  if (authForm) authForm.style.display = "";
+  const resetStatus = document.getElementById("resetStatus");
+  if (resetStatus) { resetStatus.textContent = ""; resetStatus.classList.remove("show"); }
 }
 function showVerifyPanel(email) {
   pendingVerifyEmail = email;
@@ -514,6 +555,87 @@ async function submitAuth(event) {
     button.disabled = false;
   }
 }
+function setResetStatus(text, error=false) {
+  const el = document.getElementById("resetStatus");
+  if (!el) return;
+  el.textContent = text || "";
+  el.classList.toggle("show", !!text);
+  el.style.color = error ? "#ff9b9b" : "#aeb5c2";
+}
+function showForgotPassword() {
+  const email = document.getElementById("authEmail").value.trim();
+  document.getElementById("authForm").style.display = "none";
+  document.querySelector(".auth-switch").style.display = "none";
+  document.querySelector(".auth-note").style.display = "none";
+  document.getElementById("resetPanel").classList.add("show");
+  document.getElementById("resetEmail").value = email;
+  setResetStatus("");
+  setTimeout(() => document.getElementById("resetEmail").focus(), 50);
+}
+function backToSignIn() {
+  document.getElementById("resetPanel").classList.remove("show");
+  document.getElementById("authForm").style.display = "";
+  document.querySelector(".auth-switch").style.display = "";
+  document.querySelector(".auth-note").style.display = "";
+  authMode = "login";
+  renderAuthMode();
+  setTimeout(() => document.getElementById("authEmail").focus(), 50);
+}
+async function sendResetCode() {
+  const email = document.getElementById("resetEmail").value.trim();
+  if (!email) { setResetStatus("Enter your account email.", true); return; }
+  const button = document.getElementById("resetSendCode");
+  button.disabled = true;
+  setResetStatus("Sending reset code…");
+  try {
+    const response = await fetch(AUTH_API_URL.replace(/\/+$/, "") + "/auth/send-code", {
+      method: "POST", headers: {"Content-Type":"application/json"}, credentials: "include",
+      body: JSON.stringify({email, purpose:"reset"})
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(data.error || data.message || "Unable to send reset code.");
+    setResetStatus("Reset code sent. Check your email.");
+  } catch (err) { setResetStatus(err.message || "Unable to send reset code.", true); }
+  finally { button.disabled = false; }
+}
+async function resendResetCode() {
+  return sendResetCode();
+}
+async function resetPassword() {
+  const email = document.getElementById("resetEmail").value.trim();
+  const code = document.getElementById("resetCode").value.trim();
+  const password = document.getElementById("resetPassword").value;
+  const confirm = document.getElementById("resetPasswordConfirm").value;
+  if (!email) return setResetStatus("Enter your account email.", true);
+  if (!/^\d{6}$/.test(code)) return setResetStatus("Enter the 6-digit reset code.", true);
+  if (password.length < 8) return setResetStatus("New password must be at least 8 characters.", true);
+  if (password !== confirm) return setResetStatus("Passwords do not match.", true);
+  const button = document.getElementById("resetPasswordBtn");
+  button.disabled = true;
+  setResetStatus("Resetting password…");
+  try {
+    const response = await fetch(AUTH_API_URL.replace(/\/+$/, "") + "/auth/verify-code", {
+      method: "POST", headers: {"Content-Type":"application/json"}, credentials: "include",
+      body: JSON.stringify({email, code, purpose:"reset", new_password:password})
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(data.error || data.message || "Password reset failed.");
+    setResetStatus("Password reset successfully. You can now sign in.");
+    setTimeout(() => {
+      document.getElementById("resetPanel").classList.remove("show");
+      document.getElementById("authForm").style.display = "";
+      document.querySelector(".auth-switch").style.display = "";
+      document.querySelector(".auth-note").style.display = "";
+      document.getElementById("authEmail").value = email;
+      document.getElementById("authPassword").value = "";
+      authMode = "login";
+      renderAuthMode();
+      setAuthStatus("Password reset successfully. Sign in with your new password.");
+    }, 700);
+  } catch (err) { setResetStatus(err.message || "Password reset failed.", true); }
+  finally { button.disabled = false; }
+}
+
 async function verifyEmailCode() {
   const code = document.getElementById("verifyCode").value.trim();
   if (!pendingVerifyEmail) return;
@@ -564,6 +686,9 @@ async function resendVerificationCode() {
   }
 }
 document.getElementById("verifyCode").addEventListener("input", function(){
+  this.value = this.value.replace(/\D/g, "").slice(0, 6);
+});
+document.getElementById("resetCode").addEventListener("input", function(){
   this.value = this.value.replace(/\D/g, "").slice(0, 6);
 });
 
