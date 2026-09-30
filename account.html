@@ -207,7 +207,42 @@ function showDashboard(user){
   document.getElementById("dashboard").classList.add("show");
 }
 
+const PB_SESSION_KEY = "proxybridge_account_session_v1";
+
+function getLocalSessionUser(){
+  try{
+    const raw=localStorage.getItem(PB_SESSION_KEY);
+    if(!raw) return null;
+    const parsed=JSON.parse(raw);
+    if(parsed && parsed.user && parsed.user.email) return parsed.user;
+  }catch(_){}
+  return null;
+}
+
+function saveLocalSession(user){
+  if(!user || !user.email) return;
+  try{
+    localStorage.setItem(PB_SESSION_KEY, JSON.stringify({
+      user:user,
+      saved_at:Date.now()
+    }));
+  }catch(_){}
+}
+
+function clearLocalSession(){
+  try{ localStorage.removeItem(PB_SESSION_KEY); }catch(_){}
+}
+
 async function loadAccount(){
+  const cachedUser=getLocalSessionUser();
+
+  // Use the persistent website session immediately.
+  // This avoids redirecting to index.html when the backend cookie
+  // is unavailable during cross-page navigation.
+  if(cachedUser){
+    showDashboard(cachedUser);
+  }
+
   try{
     const response=await fetch(
       AUTH_API_URL.replace(/\/+$/,"")+"/auth/me",
@@ -216,14 +251,22 @@ async function loadAccount(){
 
     const data=await response.json().catch(()=>({}));
 
-    if(!response.ok || !data.authenticated || !data.user){
-      window.location.href="index.html";
+    if(response.ok && data.authenticated && data.user){
+      saveLocalSession(data.user);
+      showDashboard(data.user);
       return;
     }
 
-    showDashboard(data.user);
+    // Backend cookie unavailable: keep the locally restored account.
+    if(cachedUser) return;
+
+    document.getElementById("loading").textContent="Please sign in to open your account.";
+    setTimeout(()=>{ window.location.href="index.html"; },1200);
   }catch(error){
-    window.location.href="index.html";
+    if(cachedUser) return;
+
+    document.getElementById("loading").textContent="Please sign in to open your account.";
+    setTimeout(()=>{ window.location.href="index.html"; },1200);
   }
 }
 
@@ -239,6 +282,7 @@ async function logoutAccount(){
     );
   }catch(_){}
 
+  clearLocalSession();
   window.location.href="index.html";
 }
 
