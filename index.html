@@ -410,14 +410,57 @@ function setAccountUI(user) {
 function toggleAccountMenu() {
   document.getElementById("accountMenu")?.classList.toggle("open");
 }
-async function loadCurrentUser() {
+const PB_SESSION_KEY = "proxybridge_account_session_v1";
+
+function saveLocalSession(user) {
+  if (!user || !user.email) return;
   try {
-    const response = await fetch(AUTH_API_URL.replace(/\/+$/,"") + "/auth/me", {credentials:"include"});
+    localStorage.setItem(PB_SESSION_KEY, JSON.stringify({
+      user: user,
+      saved_at: Date.now()
+    }));
+  } catch (_) {}
+}
+
+function getLocalSessionUser() {
+  try {
+    const raw = localStorage.getItem(PB_SESSION_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (parsed && parsed.user && parsed.user.email) return parsed.user;
+  } catch (_) {}
+  return null;
+}
+
+function clearLocalSession() {
+  try { localStorage.removeItem(PB_SESSION_KEY); } catch (_) {}
+}
+
+async function loadCurrentUser() {
+  // Restore the account immediately so navigating/refreshing the dashboard
+  // does not make the website appear signed out just because the browser
+  // session cookie is unavailable.
+  const cachedUser = getLocalSessionUser();
+  if (cachedUser) setAccountUI(cachedUser);
+
+  try {
+    const response = await fetch(
+      AUTH_API_URL.replace(/\/+$/,"") + "/auth/me",
+      {credentials:"include"}
+    );
     const data = await response.json().catch(() => ({}));
-    if (response.ok && data.authenticated && data.user) setAccountUI(data.user);
-    else setAccountUI(null);
+
+    if (response.ok && data.authenticated && data.user) {
+      saveLocalSession(data.user);
+      setAccountUI(data.user);
+      return;
+    }
+
+    // Do NOT immediately clear a valid local account when /auth/me is
+    // unavailable or the backend cookie has not survived navigation.
+    if (!cachedUser) setAccountUI(null);
   } catch (_) {
-    setAccountUI(null);
+    if (!cachedUser) setAccountUI(null);
   }
 }
 function openPaidCheckout(url, event) {
@@ -439,8 +482,18 @@ function openPaidCheckout(url, event) {
 
 async function logoutAccount() {
   try {
-    await fetch(AUTH_API_URL.replace(/\/+$/,"") + "/auth/logout", {method:"POST", credentials:"include", headers:{"Content-Type":"application/json"}});
+    await fetch(
+      AUTH_API_URL.replace(/\/+$/,"") + "/auth/logout",
+      {
+        method:"POST",
+        credentials:"include",
+        headers:{"Content-Type":"application/json"}
+      }
+    );
   } catch (_) {}
+
+  // Only an explicit Sign Out clears the persistent local account.
+  clearLocalSession();
   setAccountUI(null);
   document.getElementById("accountMenu")?.classList.remove("open");
 }
@@ -545,6 +598,7 @@ async function submitAuth(event) {
     } else {
       setAuthStatus("Signed in successfully. You can now use your Proxy Bridge account.");
       if (data.user) {
+        saveLocalSession(data.user);
         setAccountUI(data.user);
         setTimeout(() => closeAuth(), 700);
       }
@@ -656,7 +710,10 @@ async function verifyEmailCode() {
     const data = await response.json().catch(() => ({}));
     if (!response.ok) throw new Error(data.error || data.message || "Verification failed.");
     setVerifyStatus("Email verified successfully. Your Proxy Bridge account is ready.");
-    if (data.user) setAccountUI(data.user);
+    if (data.user) {
+      saveLocalSession(data.user);
+      setAccountUI(data.user);
+    }
     setTimeout(() => closeAuth(), 900);
   } catch (err) {
     setVerifyStatus(err.message || "Unable to verify the code.", true);
