@@ -70,6 +70,12 @@ footer{border-top:1px solid #1b202b;padding:35px 0;color:#7f8999}
 .auth-field input{width:100%;padding:12px 13px;border-radius:10px;border:1px solid #303745;background:#0b0f16;color:#f4f5f8;outline:none}
 .auth-field input:focus{border-color:#7c5cff}
 .auth-submit{width:100%;margin-top:10px;border:0;cursor:pointer}
+.social-auth{display:flex;flex-direction:column;gap:10px;margin:18px 0 14px}
+.social-divider{display:flex;align-items:center;gap:10px;color:#687181;font-size:12px;margin:2px 0 4px}
+.social-divider::before,.social-divider::after{content:"";height:1px;background:#2a3140;flex:1}
+.social-auth-btn{width:100%;padding:12px 14px;border-radius:10px;border:1px solid #303745;background:#11151d;color:#f4f5f8;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px}
+.social-auth-btn:hover{border-color:#7c5cff;background:#151a24}
+.social-icon{width:20px;height:20px;display:inline-flex;align-items:center;justify-content:center;font-size:16px;font-weight:800}
 .auth-note{font-size:13px;color:#8f98a7;margin:12px 0 0}
 .auth-status{display:none;margin-top:14px;padding:10px 12px;border-radius:10px;background:#0b0f16;color:#aeb5c2;font-size:13px}
 .auth-status.show{display:block}
@@ -297,6 +303,18 @@ footer{border-top:1px solid #1b202b;padding:35px 0;color:#7f8999}
       <button class="auth-close" type="button" aria-label="Close" onclick="closeAuth()">×</button>
     </div>
 
+    <div class="social-auth" id="socialAuth">
+      <button class="social-auth-btn" type="button" onclick="startGoogleWebAuth()">
+        <span class="social-icon">G</span>
+        <span>Continue with Google</span>
+      </button>
+      <button class="social-auth-btn" type="button" onclick="startGitHubWebAuth()">
+        <span class="social-icon">◉</span>
+        <span>Continue with GitHub</span>
+      </button>
+      <div class="social-divider"><span>or continue with email</span></div>
+    </div>
+
     <form id="authForm" onsubmit="submitAuth(event)">
       <div class="auth-field" id="nameField">
         <label for="authName">Name</label>
@@ -497,6 +515,13 @@ async function logoutAccount() {
   document.getElementById("accountMenu")?.classList.remove("open");
 }
 
+function startGoogleWebAuth() {
+  window.location.href = AUTH_API_URL.replace(/\/+$/, "") + "/auth/google/login";
+}
+function startGitHubWebAuth() {
+  window.location.href = AUTH_API_URL.replace(/\/+$/, "") + "/auth/github/login";
+}
+
 function openAuth(mode) {
   authMode = mode || "register";
   resetVerifyPanel();
@@ -545,6 +570,8 @@ function resetVerifyPanel() {
   const note = document.querySelector(".auth-note");
   if (panel) panel.classList.remove("show");
   if (form) form.style.display = "";
+  const social = document.getElementById("socialAuth");
+  if (social) social.style.display = "";
   if (switchEl) switchEl.style.display = "";
   if (note) note.style.display = "";
   const code = document.getElementById("verifyCode");
@@ -560,6 +587,7 @@ function resetVerifyPanel() {
 function showVerifyPanel(email) {
   pendingVerifyEmail = email;
   document.getElementById("authForm").style.display = "none";
+  document.getElementById("socialAuth").style.display = "none";
   document.querySelector(".auth-switch").style.display = "none";
   document.querySelector(".auth-note").style.display = "none";
   document.getElementById("verifyEmailText").textContent = email;
@@ -634,6 +662,7 @@ function setResetStatus(text, error=false) {
 function showForgotPassword() {
   const email = document.getElementById("authEmail").value.trim();
   document.getElementById("authForm").style.display = "none";
+  document.getElementById("socialAuth").style.display = "none";
   document.querySelector(".auth-switch").style.display = "none";
   document.querySelector(".auth-note").style.display = "none";
   document.getElementById("resetPanel").classList.add("show");
@@ -644,6 +673,7 @@ function showForgotPassword() {
 function backToSignIn() {
   document.getElementById("resetPanel").classList.remove("show");
   document.getElementById("authForm").style.display = "";
+  document.getElementById("socialAuth").style.display = "";
   document.querySelector(".auth-switch").style.display = "";
   document.querySelector(".auth-note").style.display = "";
   authMode = "login";
@@ -693,6 +723,7 @@ async function resetPassword() {
     setTimeout(() => {
       document.getElementById("resetPanel").classList.remove("show");
       document.getElementById("authForm").style.display = "";
+      document.getElementById("socialAuth").style.display = "";
       document.querySelector(".auth-switch").style.display = "";
       document.querySelector(".auth-note").style.display = "";
       document.getElementById("authEmail").value = email;
