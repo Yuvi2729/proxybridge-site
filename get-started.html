@@ -5,9 +5,11 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Get Started — Proxy Bridge</title>
 <meta name="description" content="Download and install Proxy Bridge for macOS.">
+
 <style>
 *{box-sizing:border-box}
 html{scroll-behavior:smooth}
+
 body{
   margin:0;
   background:#080a0f;
@@ -15,6 +17,7 @@ body{
   font-family:Inter,-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",Arial,sans-serif;
   line-height:1.6;
 }
+
 a{color:inherit;text-decoration:none}
 .wrap{max-width:1080px;margin:auto;padding:0 24px}
 
@@ -24,12 +27,14 @@ nav{
   align-items:center;
   border-bottom:1px solid #1b202b;
 }
+
 .nav-inner{
   width:100%;
   display:flex;
   align-items:center;
   justify-content:space-between;
 }
+
 .brand{
   display:flex;
   align-items:center;
@@ -37,10 +42,19 @@ nav{
   font-weight:800;
   font-size:20px;
 }
+
 .logo{
-  width:40px;height:40px;border-radius:10px;overflow:hidden;
+  width:40px;
+  height:40px;
+  border-radius:10px;
+  overflow:hidden;
 }
-.logo img{width:100%;height:100%;display:block}
+
+.logo img{
+  width:100%;
+  height:100%;
+  display:block;
+}
 
 .nav-back{
   color:#aeb5c2;
@@ -48,6 +62,7 @@ nav{
   font-weight:600;
   transition:.2s;
 }
+
 .nav-back:hover{color:#fff}
 
 .btn{
@@ -63,14 +78,17 @@ nav{
   transition:.2s ease;
   cursor:pointer;
 }
+
 .btn:hover{
   transform:translateY(-2px);
   background:#8b70ff;
 }
+
 .btn.ghost{
   background:#11151d;
   border-color:#303745;
 }
+
 .btn.ghost:hover{
   background:#171c26;
   border-color:#7c5cff;
@@ -80,6 +98,7 @@ nav{
   text-align:center;
   padding:88px 0 65px;
 }
+
 .eyebrow{
   color:#9b86ff;
   font-weight:700;
@@ -87,18 +106,21 @@ nav{
   text-transform:uppercase;
   font-size:13px;
 }
+
 h1{
   font-size:clamp(44px,7vw,72px);
   line-height:1.02;
   letter-spacing:-2px;
   margin:18px 0 18px;
 }
+
 .hero p{
   max-width:680px;
   margin:0 auto;
   color:#aeb5c2;
   font-size:19px;
 }
+
 .hero-buttons{
   display:flex;
   justify-content:center;
@@ -121,6 +143,7 @@ h1{
   transition:.2s ease;
   box-shadow:0 10px 35px rgba(255,255,255,.07);
 }
+
 .download:hover{
   transform:translateY(-2px);
   background:#f1f1f1;
@@ -131,10 +154,12 @@ h1{
   text-align:center;
   margin-bottom:30px;
 }
+
 .section-title h2{
   margin:0 0 7px;
   font-size:32px;
 }
+
 .muted{color:#9da6b5}
 
 .steps{
@@ -142,6 +167,7 @@ h1{
   grid-template-columns:repeat(2,1fr);
   gap:18px;
 }
+
 .step{
   background:#10141c;
   border:1px solid #202633;
@@ -151,10 +177,12 @@ h1{
   gap:18px;
   transition:.2s ease;
 }
+
 .step:hover{
   border-color:#343b4b;
   transform:translateY(-2px);
 }
+
 .num{
   flex:0 0 44px;
   width:44px;
@@ -166,15 +194,18 @@ h1{
   color:#fff;
   font-weight:800;
 }
+
 .step h3{
   margin:0 0 6px;
   font-size:19px;
 }
+
 .step p{
   margin:0;
   color:#9da6b5;
   font-size:14px;
 }
+
 .path{
   display:inline-block;
   margin-top:12px;
@@ -195,17 +226,28 @@ h1{
   border-radius:14px;
   background:#0d1118;
 }
-.notice strong{display:block;margin-bottom:4px}
-.notice p{margin:0;color:#9da6b5;font-size:14px}
+
+.notice strong{
+  display:block;
+  margin-bottom:4px;
+}
+
+.notice p{
+  margin:0;
+  color:#9da6b5;
+  font-size:14px;
+}
 
 .final-cta{
   text-align:center;
   padding:80px 0 90px;
 }
+
 .final-cta h2{
   margin:0 0 8px;
   font-size:32px;
 }
+
 .final-cta p{
   color:#9da6b5;
   margin:0 0 25px;
@@ -218,6 +260,7 @@ footer{
   text-align:center;
   font-size:13px;
 }
+
 .footer-links{
   display:flex;
   justify-content:center;
@@ -225,15 +268,36 @@ footer{
   flex-wrap:wrap;
   margin-top:10px;
 }
-.footer-links a{color:#aeb5c2}
-.footer-links a:hover{color:#fff}
+
+.footer-links a{
+  color:#aeb5c2;
+}
+
+.footer-links a:hover{
+  color:#fff;
+}
 
 @media(max-width:750px){
-  .wrap{padding-left:18px;padding-right:18px}
-  .hero{padding-top:65px}
-  .steps{grid-template-columns:1fr}
-  .step{padding:21px}
-  h1{letter-spacing:-1px}
+  .wrap{
+    padding-left:18px;
+    padding-right:18px;
+  }
+
+  .hero{
+    padding-top:65px;
+  }
+
+  .steps{
+    grid-template-columns:1fr;
+  }
+
+  .step{
+    padding:21px;
+  }
+
+  h1{
+    letter-spacing:-1px;
+  }
 }
 </style>
 </head>
@@ -243,10 +307,15 @@ footer{
 <nav>
   <div class="wrap nav-inner">
     <a class="brand" href="index.html">
-      <div class="logo"><img src="logo.png" alt="Proxy Bridge"></div>
+      <div class="logo">
+        <img src="logo.png" alt="Proxy Bridge">
+      </div>
       Proxy Bridge
     </a>
-    <a class="nav-back" href="index.html">← Back to website</a>
+
+    <a class="nav-back" href="index.html">
+      ← Back to website
+    </a>
   </div>
 </nav>
 
@@ -254,123 +323,227 @@ footer{
 
 <section class="hero">
   <div class="wrap">
+
     <div class="eyebrow">Get Started</div>
+
     <h1>Install Proxy Bridge.</h1>
+
     <p>
       Download Proxy Bridge for macOS and get your Premiere Pro → DaVinci Resolve
       proxy workflow running in just a few simple steps.
     </p>
 
     <div class="hero-buttons">
-      <a class="download"
-         href="https://github.com/Yuvi2729/proxybridge-site/releases/latest/download/ProxyBridge.pkg"
+
+      <!-- DOWNLOAD BUTTON -->
+      <a
+        class="download"
+        href="https://github.com/Yuvi2729/proxybridge-site/releases/latest/download/ProxyBridge.pkg"
+      >
          &nbsp; Download for macOS
       </a>
-      <a class="btn ghost" href="#steps">Installation Guide</a>
+
+      <a class="btn ghost" href="#steps">
+        Installation Guide
+      </a>
+
     </div>
   </div>
 </section>
 
+
 <section id="steps">
+
   <div class="wrap">
+
     <div class="section-title">
       <h2>Install in a few steps</h2>
-      <p class="muted">Everything you need to get Proxy Bridge running on your Mac.</p>
+      <p class="muted">
+        Everything you need to get Proxy Bridge running on your Mac.
+      </p>
     </div>
+
 
     <div class="steps">
 
+
+      <!-- STEP 01 -->
       <div class="step">
         <div class="num">01</div>
+
         <div>
           <h3>Download Proxy Bridge</h3>
-          <p>Click the download button above. Your browser will download the Proxy Bridge DMG installer.</p>
-          <span class="path">ProxyBridge.V26.0.dmg</span>
+
+          <p>
+            Click the download button above. Your browser will download the
+            Proxy Bridge installer package.
+          </p>
+
+          <span class="path">
+            ProxyBridge.pkg
+          </span>
         </div>
       </div>
 
+
+      <!-- STEP 02 -->
       <div class="step">
         <div class="num">02</div>
+
         <div>
-          <h3>Open the DMG</h3>
-          <p>When the download finishes, open the downloaded <strong>.dmg</strong> file from your Downloads folder.</p>
+          <h3>Open the PKG installer</h3>
+
+          <p>
+            When the download finishes, open the downloaded
+            <strong>.pkg</strong> file from your Downloads folder.
+          </p>
         </div>
       </div>
 
+
+      <!-- STEP 03 -->
       <div class="step">
         <div class="num">03</div>
+
         <div>
-          <h3>Move to Applications</h3>
-          <p>Finder will open with the installer. Drag <strong>Proxy Bridge</strong> into your <strong>Applications</strong> folder.</p>
-          <span class="path">Proxy Bridge → Applications</span>
+          <h3>Install Proxy Bridge</h3>
+
+          <p>
+            Follow the macOS installer steps and click
+            <strong>Continue</strong>, then <strong>Install</strong>
+            when prompted.
+          </p>
         </div>
       </div>
 
+
+      <!-- STEP 04 -->
       <div class="step">
         <div class="num">04</div>
+
         <div>
           <h3>Open Applications</h3>
-          <p>Open Finder → Applications and locate <strong>Proxy Bridge</strong>.</p>
+
+          <p>
+            After installation finishes, open Finder → Applications
+            and locate <strong>Proxy Bridge</strong>.
+          </p>
+
+          <span class="path">
+            Applications → Proxy Bridge
+          </span>
         </div>
       </div>
 
+
+      <!-- STEP 05 -->
       <div class="step">
         <div class="num">05</div>
+
         <div>
           <h3>Allow macOS to open the app</h3>
+
           <p>
             If macOS shows a security warning, close it, right-click
             <strong>Proxy Bridge</strong>, and choose <strong>Open</strong>.
-            If needed, go to <strong>System Settings → Privacy &amp; Security</strong>
+            If needed, go to
+            <strong>System Settings → Privacy &amp; Security</strong>
             and select <strong>Open Anyway</strong>.
           </p>
         </div>
       </div>
 
+
+      <!-- STEP 06 -->
       <div class="step">
         <div class="num">06</div>
+
         <div>
           <h3>Launch Proxy Bridge</h3>
-          <p>Confirm the prompt by clicking <strong>Open</strong>. Proxy Bridge will launch and you're ready to start editing.</p>
+
+          <p>
+            Confirm the prompt by clicking <strong>Open</strong>.
+            Proxy Bridge will launch and you're ready to start editing.
+          </p>
         </div>
       </div>
 
+
     </div>
 
+
     <div class="notice">
+
       <strong>First launch security notice</strong>
+
       <p>
         Proxy Bridge is currently distributed outside the Mac App Store and may
         show a macOS security warning on first launch. This is expected for an
         app that has not been notarized by Apple.
       </p>
+
     </div>
+
   </div>
+
 </section>
 
+
 <section class="final-cta">
+
   <div class="wrap">
+
     <h2>Ready to get started?</h2>
-    <p>Download Proxy Bridge and start bridging your proxy workflow.</p>
-    <a class="download"
-       href="https://github.com/Yuvi2729/proxybridge-site/releases/download/V26.0/ProxyBridge.V26.0.dmg">
+
+    <p>
+      Download Proxy Bridge and start bridging your proxy workflow.
+    </p>
+
+    <!-- FINAL DOWNLOAD BUTTON -->
+    <a
+      class="download"
+      href="https://github.com/Yuvi2729/proxybridge-site/releases/latest/download/ProxyBridge.pkg"
+    >
        &nbsp; Download Proxy Bridge
     </a>
+
   </div>
+
 </section>
 
 </main>
 
+
 <footer>
+
   <div class="wrap">
-    <div>© 2026 Yuvraj Singh · Proxy Bridge · Built for editors</div>
-    <div class="footer-links">
-      <a href="terms.html">Terms &amp; Conditions</a>
-      <a href="privacy.html">Privacy Policy</a>
-      <a href="refund.html">Refund Policy</a>
-      <a href="mailto:proxybridgesupport@gmail.com">Support</a>
+
+    <div>
+      © 2026 Yuvraj Singh · Proxy Bridge · Built for editors
     </div>
+
+    <div class="footer-links">
+
+      <a href="terms.html">
+        Terms &amp; Conditions
+      </a>
+
+      <a href="privacy.html">
+        Privacy Policy
+      </a>
+
+      <a href="refund.html">
+        Refund Policy
+      </a>
+
+      <a href="mailto:proxybridgesupport@gmail.com">
+        Support
+      </a>
+
+    </div>
+
   </div>
+
 </footer>
 
 </body>
